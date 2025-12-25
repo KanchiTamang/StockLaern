@@ -1,8 +1,10 @@
 
 import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from "expo-router";
+import { useState } from 'react';
 
 export default function TabLayout() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   return (
     <Tabs
       screenOptions={{
@@ -54,9 +56,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: isLoggedIn ? "Profile" : "Login",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="user" color={color} size={size} />
+            <Feather name={isLoggedIn ? "user" : "log-in"} color={color} size={size} />
           ),
         }}
       />
