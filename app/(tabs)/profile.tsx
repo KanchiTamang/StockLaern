@@ -2,6 +2,8 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator, // Added for better UX
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,13 +16,68 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false); // New loading state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [number, setNumber] = useState("");
 
-  const handleSubmit = () => {
-    // Later replace with your authentication logic
-    //router.push("/dashboard");
+  // Update this base URL if your ngrok link changes
+  const BASE_URL = "https://winston-uncastigated-addictedly.ngrok-free.dev";
+
+  const handleSubmit = async () => {
+    // Validation
+    if (!email || !password || (!isLogin && (!name || !number))) {
+      Alert.alert("Error", "Please fill all the fields");
+      return;
+    }
+
+    const url = isLogin ? `${BASE_URL}/auth/login` : `${BASE_URL}/auth/signup`;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // CRITICAL: This bypasses the ngrok warning page that blocks API calls
+          "ngrok-skip-browser-warning": "true", 
+        },
+        body: JSON.stringify(
+          isLogin
+            ? { email, password }
+            : { name, number, email, password }
+        ),
+      });
+
+      // Get raw text first to debug if JSON parsing fails
+      const responseText = await response.text();
+      let data;
+      
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Non-JSON response received:", responseText);
+        throw new Error("Server did not return a valid JSON response");
+      }
+
+      if (!response.ok) {
+        Alert.alert("Failure", data.message || "Server error");
+        return;
+      }
+
+      Alert.alert("Success", isLogin ? "Login Successful" : "Signup Successful");
+      
+      // If you want to persist the login, you would save a token here
+      router.push("/(tabs)/profile"); // Update to your actual dashboard route
+
+    } catch (error) {
+      console.log("Network Error:", error);
+      Alert.alert("Connection Error", "Cannot connect to the server. Ensure ngrok is running.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,83 +94,70 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* LOGO + TEXT */}
-      <View style={styles.logoSection}>
-        <View style={styles.logoBox}>
-          <Feather name="trending-up" size={32} color="#fff" />
-        </View>
-        <Text style={styles.logoTitle}>
-          {isLogin ? "Welcome Back!" : "Create Your Account"}
-        </Text>
-        <Text style={styles.logoDesc}>
-          {isLogin ? "Sign in to access your dashboard" : "Start your learning journey"}
-        </Text>
-      </View>
-
       {/* FORM */}
       <View style={styles.formCard}>
         {!isLogin && (
-          <View style={styles.inputBlock}>
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputWrapper}>
-              <Feather name="user" size={20} color="#aaa" style={styles.inputIcon} />
+          <>
+            <View style={styles.inputBlock}>
+              <Text style={styles.label}>Full Name</Text>
               <TextInput
-                placeholder="Enter your name"
                 style={styles.input}
+                placeholder="name"
                 value={name}
                 onChangeText={setName}
               />
             </View>
-          </View>
+
+            <View style={styles.inputBlock}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="98XXXXXXXX"
+                keyboardType="phone-pad"
+                value={number}
+                onChangeText={setNumber}
+              />
+            </View>
+          </>
         )}
 
-        {/* EMAIL */}
         <View style={styles.inputBlock}>
-          <Text style={styles.label}>Email Address</Text>
-          <View style={styles.inputWrapper}>
-            <Feather name="mail" size={20} color="#aaa" style={styles.inputIcon} />
-            <TextInput
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="example@mail.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+          />
         </View>
 
-        {/* PASSWORD */}
         <View style={styles.inputBlock}>
           <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Feather name="lock" size={20} color="#aaa" style={styles.inputIcon} />
-            <TextInput
-              placeholder="Enter your password"
-              secureTextEntry
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
         </View>
 
-        {/* REMEMBER + FORGOT */}
-        {isLogin && (
-          <View style={styles.rowBetween}>
-            <Text style={styles.remember}>Remember me</Text>
-            <Text style={styles.forgot}>Forgot?</Text>
-          </View>
-        )}
-
-        {/* SUBMIT BUTTON */}
-        <TouchableOpacity style={styles.mainButton} onPress={handleSubmit}>
-          <Text style={styles.mainButtonText}>
-            {isLogin ? "Sign In" : "Create Account"}
-          </Text>
+        <TouchableOpacity 
+          style={[styles.mainButton, loading && { opacity: 0.7 }]} 
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.mainButtonText}>
+              {isLogin ? "Sign In" : "Create Account"}
+            </Text>
+          )}
         </TouchableOpacity>
 
-        {/* SWITCH LOGIN | SIGNUP */}
         <Text style={styles.switchText}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <Text
@@ -146,100 +190,22 @@ export default function ProfileScreen() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-
-  header: {
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderColor: "#eee",
-    gap: 14,
-    backgroundColor: "#fff",
-  },
-  backButton: {
-    padding: 6,
-    borderRadius: 10,
-    backgroundColor: "#f3f3f3",
-  },
-  headerTitle: { fontSize: 18, fontWeight: "600", color: "#222" },
-  headerSubtitle: { fontSize: 12, color: "#666" },
-
-  logoSection: { alignItems: "center", marginTop: 30, marginBottom: 20 },
-  logoBox: {
-    width: 70,
-    height: 70,
-    borderRadius: 20,
-    backgroundColor: "#6366F1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logoTitle: { fontSize: 20, fontWeight: "700", marginTop: 12 },
-  logoDesc: { color: "#666", fontSize: 13, marginTop: 4 },
-
-  formCard: {
-    marginHorizontal: 20,
-    padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#eee",
-    elevation: 2,
-    marginBottom: 20,
-  },
-
+  header: { padding: 16, paddingTop: 60, flexDirection: "row", gap: 14 },
+  backButton: { padding: 6, backgroundColor: "#f3f3f3", borderRadius: 10, alignSelf: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#1E293B" },
+  headerSubtitle: { fontSize: 13, color: "#64748B" },
+  formCard: { margin: 20, padding: 24, borderRadius: 24, borderWidth: 1, borderColor: "#F1F5F9", backgroundColor: '#fff' },
   inputBlock: { marginBottom: 18 },
-  label: { fontSize: 14, color: "#333", marginBottom: 6 },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    backgroundColor: "#fafafa",
-  },
-  inputIcon: { marginRight: 8 },
-  input: { flex: 1, paddingVertical: 12, fontSize: 14 },
-
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  remember: { color: "#555", fontSize: 13 },
-  forgot: { color: "#4F46E5", fontSize: 13 },
-
-  mainButton: {
-    backgroundColor: "#4F46E5",
-    paddingVertical: 15,
-    borderRadius: 16,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  mainButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-
-  switchText: { textAlign: "center", color: "#555", fontSize: 14 },
-  switchLink: { color: "#4F46E5", fontWeight: "600" },
-
-  featuresRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 20,
-    marginTop: 10,
-  },
-  featureCard: {
-    width: "32%",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#eee",
-    alignItems: "center",
-  },
-  featureEmoji: { fontSize: 28, marginBottom: 6 },
-  featureLabel: { fontSize: 12, color: "#555" },
+  label: { marginBottom: 8, fontSize: 14, fontWeight: "600", color: "#475569" },
+  input: { borderWidth: 1, borderColor: "#E2E8F0", borderRadius: 12, padding: 14, fontSize: 15 },
+  mainButton: { backgroundColor: "#4F46E5", padding: 16, borderRadius: 16, alignItems: "center", marginTop: 10 },
+  mainButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  switchText: { textAlign: "center", marginTop: 16, color: "#64748B" },
+  switchLink: { color: "#4F46E5", fontWeight: "700" },
+  featuresRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 10 },
+  featureCard: { alignItems: "center", padding: 10 },
+  featureEmoji: { fontSize: 28, marginBottom: 8 },
+  featureLabel: { fontSize: 12, fontWeight: "600", color: "#64748B" },
 });
