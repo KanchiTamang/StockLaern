@@ -1,5 +1,5 @@
 import { Activity, ArrowLeft, Search, TrendingDown, TrendingUp } from "lucide-react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -154,9 +154,9 @@ export default function MarketScreen({ onNavigate }: BrowseMarketProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
   header: {
-    backgroundColor: "#4ade80", // green gradient replaced with solid color
+    backgroundColor: "#031D44",
     padding: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
@@ -166,20 +166,20 @@ const styles = StyleSheet.create({
   headerSubtitle: { color: "#d1fae5", fontSize: 14 },
   content: { padding: 16 },
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
-  statBox: { flex: 1, backgroundColor: "#fff", borderRadius: 12, padding: 12, marginHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4 },
+  statBox: { flex: 1, backgroundColor: "#fff", borderRadius: 12, padding: 12, marginHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: "#E2E8F0" },
   statLabel: { fontSize: 12, color: "#6b7280", marginBottom: 4 },
   statValue: { fontSize: 14, fontWeight: "bold", color: "#111" },
-  searchContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 12, marginBottom: 16, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4 },
+  searchContainer: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, paddingHorizontal: 12, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: "#E2E8F0" },
   searchIcon: { marginRight: 8 },
   searchInput: { flex: 1, height: 40 },
   tabs: { flexDirection: "row", marginBottom: 16 },
-  tabButton: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: "#e5e7eb", marginHorizontal: 2, alignItems: "center" },
-  tabButtonActive: { backgroundColor: "#3b82f6" },
+  tabButton: { flex: 1, paddingVertical: 8, borderRadius: 12, backgroundColor: "#E2E8F0", marginHorizontal: 2, alignItems: "center" },
+  tabButtonActive: { backgroundColor: "#70A288" },
   tabButtonActiveGreen: { backgroundColor: "#22c55e" },
   tabButtonActiveRed: { backgroundColor: "#ef4444" },
   tabText: { color: "#4b5563", fontSize: 14 },
   tabTextActive: { color: "#fff", fontWeight: "bold" },
-  companyCard: { backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4 },
+  companyCard: { backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: "#E2E8F0" },
   companyHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   companySymbol: { fontSize: 16, fontWeight: "bold", color: "#111" },
   companyName: { fontSize: 12, color: "#6b7280" },

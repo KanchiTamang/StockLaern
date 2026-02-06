@@ -1,173 +1,226 @@
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { BarChart, PieChart } from "react-native-chart-kit";
+
+const screenWidth = Dimensions.get("window").width;
+
+/* data */
+
+const sectorData = [
+  {
+    name: "Banking",
+    population: 35,
+    color: "#2563EB",
+    legendFontColor: "#334155",
+    legendFontSize: 12,
+  },
+  {
+    name: "Hydro",
+    population: 25,
+    color: "#16A34A",
+    legendFontColor: "#334155",
+    legendFontSize: 12,
+  },
+  {
+    name: "Insurance",
+    population: 18,
+    color: "#D97706",
+    legendFontColor: "#334155",
+    legendFontSize: 12,
+  },
+  {
+    name: "Hotels",
+    population: 12,
+    color: "#7C3AED",
+    legendFontColor: "#334155",
+    legendFontSize: 12,
+  },
+  {
+    name: "Others",
+    population: 10,
+    color: "#DC2626",
+    legendFontColor: "#334155",
+    legendFontSize: 12,
+  },
+];
+
+const barData = {
+  labels: ["Gainers", "Losers"],
+  datasets: [
+    {
+      data: [62, 38],
+    },
+  ],
+};
+
+const heatMapData = [
+  0.2, 0.6, 0.9, 0.4, 0.1,
+  0.3, 0.7, 1.0, 0.5, 0.2,
+  0.1, 0.4, 0.8, 0.6, 0.3,
+];
+
+/* screen */
 
 export default function InsightsScreen() {
-  const [selected, setSelected] = useState<
-    "heatmap" | "sector" | "pe" | "volume"
-  >("heatmap");
-
-  const heatmapData = [
-    { symbol: "NABIL", change: 2.4 },
-    { symbol: "NICA", change: 3.1 },
-    { symbol: "EBL", change: 1.8 },
-    { symbol: "NIBL", change: -1.2 },
-  ];
-
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Insights</Text>
-        <Text style={styles.headerSubtitle}>Market visualization</Text>
-      </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ padding: 20 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.title}>Market Insights</Text>
+      <Text style={styles.subtitle}>
+        Visual breakdown of NEPSE market trends
+      </Text>
 
-      {/* Chart Selector */}
-      <View style={styles.selector}>
-        {[
-          { key: "heatmap", label: "Heat Map" },
-          { key: "sector", label: "Sector" },
-          { key: "pe", label: "P/E vs Div" },
-          { key: "volume", label: "Volume" },
-        ].map((item) => (
-          <TouchableOpacity
-            key={item.key}
-            onPress={() => setSelected(item.key as any)}
-            style={[
-              styles.button,
-              selected === item.key && styles.buttonActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                selected === item.key && styles.buttonTextActive,
-              ]}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Content */}
+      {/*piechart */}
       <View style={styles.card}>
-        {selected === "heatmap" && (
-          <View style={styles.grid}>
-            {heatmapData.map((stock) => (
-              <View
-                key={stock.symbol}
-                style={[
-                  styles.stockBox,
-                  {
-                    backgroundColor:
-                      stock.change > 0 ? "#DCFCE7" : "#FEE2E2",
-                  },
-                ]}
-              >
-                <Text style={styles.stockSymbol}>{stock.symbol}</Text>
-                <Text
-                  style={{
-                    color: stock.change > 0 ? "#15803D" : "#B91C1C",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {stock.change > 0 ? "+" : ""}
-                  {stock.change}%
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {selected !== "heatmap" && (
-          <Text style={styles.placeholder}>
-            Chart visualization coming soon
-          </Text>
-        )}
+        <Text style={styles.cardTitle}>Sector Allocation</Text>
+        <PieChart
+          data={sectorData}
+          width={screenWidth - 40}
+          height={220}
+          accessor="population"
+          backgroundColor="transparent"
+          paddingLeft="15"
+          chartConfig={chartConfig}
+          absolute
+        />
       </View>
 
-      {/* Insight Card */}
-      <View style={styles.insightCard}>
-        <Text style={styles.insightTitle}>📊 Market Insight</Text>
-        <Text style={styles.insightText}>
-          Commercial banks dominate NEPSE, with most showing positive momentum
-          this week.
+      {/* Heatmap */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Market Momentum</Text>
+        <Text style={styles.cardDesc}>
+          Darker blocks indicate higher activity
+        </Text>
+
+        <View style={styles.heatMap}>
+          {heatMapData.map((value, index) => (
+            <View
+              key={index}
+              style={[
+                styles.heatCell,
+                { backgroundColor: getHeatColor(value) },
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+
+      {/* Barchart */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Gainers vs Losers</Text>
+        <BarChart
+          data={barData}
+          width={screenWidth - 40}
+          height={220}
+          fromZero
+          yAxisLabel=""
+          yAxisSuffix="%"
+          chartConfig={chartConfig}
+          showValuesOnTopOfBars
+        />
+      </View>
+
+      {/* Insights*/}
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>📌 Today’s Takeaways</Text>
+        <Text style={styles.infoText}>
+          • Banking sector dominates NEPSE volume{"\n"}
+          • Market sentiment is moderately bullish{"\n"}
+          • Beginners should observe before entering
         </Text>
       </View>
     </ScrollView>
   );
 }
 
+/*helpers */
+
+function getHeatColor(value: number) {
+  if (value > 0.8) return "#16A34A";
+  if (value > 0.5) return "#22C55E";
+  if (value > 0.3) return "#FACC15";
+  return "#E5E7EB";
+}
+
+const chartConfig = {
+  backgroundGradientFrom: "#FFFFFF",
+  backgroundGradientTo: "#FFFFFF",
+  decimalPlaces: 0,
+  color: () => "#2563EB",
+  labelColor: () => "#475569",
+};
+
+/* styling */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  container: { backgroundColor: "#F8FAFC" },
 
-  header: {
-    backgroundColor: "#4ade80",
-    padding: 20,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#0F172A",
   },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
-  headerSubtitle: { color: "#E9D5FF", marginTop: 4 },
 
-  selector: {
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 20,
+  },
+
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0F172A",
+    marginBottom: 10,
+  },
+
+  cardDesc: {
+    fontSize: 13,
+    color: "#64748B",
+    marginBottom: 12,
+  },
+
+  heatMap: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    padding: 16,
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-  },
-  buttonActive: {
-    backgroundColor: "#8B5CF6",
-  },
-  buttonText: { fontSize: 12, color: "#374151" },
-  buttonTextActive: { color: "#fff" },
-
-  card: {
-    backgroundColor: "#fff",
-    margin: 16,
-    padding: 16,
-    borderRadius: 16,
   },
 
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  stockBox: {
-    width: "48%",
-    padding: 16,
-    borderRadius: 12,
-  },
-  stockSymbol: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 6,
+  heatCell: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
   },
 
-  placeholder: {
-    textAlign: "center",
-    color: "#6B7280",
-  },
-
-  insightCard: {
+  infoCard: {
     backgroundColor: "#EEF2FF",
-    margin: 16,
+    borderRadius: 18,
     padding: 16,
-    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#C7D2FE",
+    marginBottom: 40,
   },
-  insightTitle: {
-    fontWeight: "bold",
+
+  infoTitle: {
+    fontWeight: "600",
+    color: "#3730A3",
     marginBottom: 6,
   },
-  insightText: {
-    color: "#374151",
-    fontSize: 13,
+
+  infoText: {
+    fontSize: 14,
+    color: "#475569",
+    lineHeight: 22,
   },
 });

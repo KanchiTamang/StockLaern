@@ -1,5 +1,4 @@
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import {
   ScrollView,
@@ -14,15 +13,9 @@ export default function HomeScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
       {/* Header */}
       <View style={styles.header}>
-        <LinearGradient
-          colors={["#06B6D4", "#22C55E"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.logoBox}
-        >
-          <Feather name="trending-up" size={26} color="#fff" />
-        </LinearGradient>
-
+        <View style={styles.iconContainer}>
+          <Feather name="trending-up" size={24} color="#fff" />
+        </View>
         <Text style={styles.title}>Stock Learn</Text>
         <Text style={styles.subtitle}>
           Your beginner-friendly platform to learn about the stock market, track
@@ -31,12 +24,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Market Overview */}
-      <LinearGradient
-        colors={["#0EA5E9", "#22C55E"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.marketCard}
-      >
+      <View style={styles.marketCard}>
         <View style={styles.marketTop}>
           <View>
             <Text style={styles.marketLabel}>NEPSE Index</Text>
@@ -54,7 +42,7 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.marketSub}>+51.24 points today</Text>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Quick Actions */}
       <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -86,7 +74,7 @@ export default function HomeScreen() {
         color="#7C3AED"
       />
 
-      {/* 🔔 Alert CTA (MISSING PART – NOW ADDED) */}
+      {/*  Alert CTA (MISSING PART – NOW ADDED) */}
       <View style={styles.alertCard}>
         <View style={styles.alertIcon}>
           <Feather name="bell" size={20} color="#D97706" />
@@ -104,7 +92,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* 💡 Beginner Tip (MISSING PART – NOW ADDED) */}
+      {/*  Beginner Tip (MISSING PART – NOW ADDED) */}
       <View style={styles.tipCard}>
         <Text style={styles.tipTitle}>💡 Beginner Tip</Text>
         <Text style={styles.tipDesc}>
@@ -116,7 +104,7 @@ export default function HomeScreen() {
   );
 }
 
-/* ---------------- COMPONENT ---------------- */
+/* component*/
 
 function QuickAction({ icon, title, desc, link, bg, color }: any) {
   return (
@@ -137,12 +125,22 @@ function QuickAction({ icon, title, desc, link, bg, color }: any) {
   );
 }
 
-/* ---------------- STYLES ---------------- */
+/* styling*/
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "#FFFFFF" },
+  container: { backgroundColor: "#F8FAFC" },
 
   header: { marginBottom: 24 },
+
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "#70A288",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
 
   logoBox: {
     width: 56,
@@ -162,7 +160,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
-  marketCard: { borderRadius: 20, padding: 20, marginBottom: 24 },
+  marketCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 24,
+    backgroundColor: "#70A288",
+  },
 
   marketTop: {
     flexDirection: "row",
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E2E8F0",
     marginBottom: 12,
   },
 
@@ -230,9 +233,9 @@ const styles = StyleSheet.create({
   /* Alert */
   alertCard: {
     flexDirection: "row",
-    backgroundColor: "#FFFBEB",
+    backgroundColor: "#FEF9F3",
     borderWidth: 1,
-    borderColor: "#FDE68A",
+    borderColor: "#E7D4C8",
     borderRadius: 16,
     padding: 16,
     marginTop: 20,
@@ -240,7 +243,7 @@ const styles = StyleSheet.create({
   },
 
   alertIcon: {
-    backgroundColor: "#FEF3C7",
+    backgroundColor: "#F0E6D8",
     padding: 10,
     borderRadius: 12,
   },
@@ -253,13 +256,13 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
 
-  alertLink: { color: "#2563EB", fontSize: 13, fontWeight: "500" },
+  alertLink: { color: "#04395E", fontSize: 13, fontWeight: "500" },
 
   /* Tip */
   tipCard: {
-    backgroundColor: "#FDF4FF",
+    backgroundColor: "#EEF2FF",
     borderWidth: 1,
-    borderColor: "#F5D0FE",
+    borderColor: "#C7D2FE",
     borderRadius: 16,
     padding: 16,
     marginTop: 16,
@@ -269,9 +272,9 @@ const styles = StyleSheet.create({
   tipTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#7C3AED",
+    color: "#3730A3",
     marginBottom: 4,
   },
 
-  tipDesc: { fontSize: 13, color: "#374151" },
+  tipDesc: { fontSize: 13, color: "#475569" },
 });

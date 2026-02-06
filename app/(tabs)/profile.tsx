@@ -1,6 +1,6 @@
-import { AntDesign, Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation, useRouter } from "expo-router";
+import { useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   // AUTH STATES
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -23,6 +24,14 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: {
+        display: isLoggedIn ? "flex" : "none",
+      },
+    });
+  }, [navigation, isLoggedIn]);
 
   // FORM STATES
   const [email, setEmail] = useState("");
@@ -68,6 +77,8 @@ export default function ProfileScreen() {
 
       Alert.alert("Success", isLogin ? "Login Successful" : "Signup Successful");
       setIsLoggedIn(true);
+      // Redirect to dashboard
+      router.push("/(tabs)/dashboard");
     } catch (error) {
       Alert.alert("Connection Error", "Cannot connect to the server.");
     } finally {
@@ -76,7 +87,11 @@ export default function ProfileScreen() {
   };
 
   const handleGoogleSignup = () => {
-    Alert.alert("Info", "Google Sign-in would be implemented here with OAuth.");
+    // For now, simulate successful Google signup
+    Alert.alert("Success", "Google Sign-up Successful");
+    setIsLoggedIn(true);
+    // Redirect to dashboard
+    router.push("/(tabs)/dashboard");
   };
 
   // --- DASHBOARD VIEW ---
@@ -134,14 +149,14 @@ export default function ProfileScreen() {
       <View style={styles.formCard}>
         {/* Toggle Switch */}
         <View style={styles.toggleContainer}>
-          <TouchableOpacity 
-            style={[styles.toggleBtn, isLogin && styles.toggleActive]} 
+          <TouchableOpacity
+            style={[styles.toggleBtn, isLogin && styles.toggleActive]}
             onPress={() => setIsLogin(true)}
           >
             <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.toggleBtn, !isLogin && styles.toggleActive]} 
+          <TouchableOpacity
+            style={[styles.toggleBtn, !isLogin && styles.toggleActive]}
             onPress={() => setIsLogin(false)}
           >
             <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>Sign Up</Text>
@@ -180,12 +195,12 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Password</Text>
           <View style={styles.inputWrapper}>
             <Feather name="lock" size={18} color="#94A3B8" style={styles.inputIcon} />
-            <TextInput 
-              style={styles.input} 
-              secureTextEntry={!showPassword} 
-              placeholder="Enter password" 
-              value={password} 
-              onChangeText={setPassword} 
+            <TextInput
+              style={styles.input}
+              secureTextEntry={!showPassword}
+              placeholder="Enter password"
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#94A3B8" />
@@ -206,12 +221,16 @@ export default function ProfileScreen() {
               <Text style={styles.label}>Ward Number</Text>
               <View style={styles.inputWrapper}>
                 <Feather name="home" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="Select ward (1-32)" 
-                  keyboardType="numeric" 
-                  value={wardNo} 
-                  onChangeText={setWardNo} 
+                <TextInput
+                  style={styles.input}
+                  placeholder="Select ward (1-32)"
+                  keyboardType="numeric"
+                  value={wardNo}
+                  onChangeText={(text) => {
+                    // Only allow numbers
+                    const numericValue = text.replace(/[^0-9]/g, '');
+                    setWardNo(numericValue);
+                  }}
                 />
               </View>
             </View>
@@ -230,16 +249,16 @@ export default function ProfileScreen() {
 
         {!isLogin && (
           <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignup}>
-            <AntDesign name="google" size={20} color="#DB4437" style={{ marginRight: 10 }} />
+            <GoogleLogo />
             <Text style={styles.googleBtnText}>Sign Up with Google</Text>
           </TouchableOpacity>
         )}
 
         {/* Benefits Section */}
         <View style={styles.benefitsContainer}>
-           <Text style={styles.benefitsTitle}>With an account, you get:</Text>
-           <BenefitItem text="Personalized price & volume spike alerts" color="#70A288" />
-           <BenefitItem text="Custom watchlist and portfolio tracking" color="#04395E" />
+          <Text style={styles.benefitsTitle}>With an account, you get:</Text>
+          <BenefitItem text="Personalized price & volume spike alerts" color="#70A288" />
+          <BenefitItem text="Custom watchlist and portfolio tracking" color="#04395E" />
         </View>
       </View>
     </ScrollView>
@@ -251,6 +270,28 @@ function BenefitItem({ text, color }: { text: string; color: string }) {
     <View style={styles.benefitRow}>
       <View style={[styles.dot, { backgroundColor: color }]} />
       <Text style={styles.benefitText}>{text}</Text>
+    </View>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <View style={styles.googleLogoContainer}>
+      {/* Google "G" Logo with colorful design */}
+      <View style={styles.googleGContainer}>
+        {/* Blue section (top-left) */}
+        <View style={[styles.googleGPart, styles.googleGBlue]} />
+        {/* Red section (top-right) */}
+        <View style={[styles.googleGPart, styles.googleGRed]} />
+        {/* Yellow section (bottom-left) */}
+        <View style={[styles.googleGPart, styles.googleGYellow]} />
+        {/* Green section (bottom-right) */}
+        <View style={[styles.googleGPart, styles.googleGGreen]} />
+        {/* White "G" shape overlay */}
+        <View style={styles.googleGWhite}>
+          <Text style={styles.googleGText}>G</Text>
+        </View>
+      </View>
     </View>
   );
 }
@@ -310,6 +351,66 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
+  },
+  googleLogoContainer: {
+    marginRight: 10,
+    width: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  googleGContainer: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    position: "relative",
+    overflow: "hidden",
+  },
+  googleGPart: {
+    position: "absolute",
+    width: "50%",
+    height: "50%",
+  },
+  googleGBlue: {
+    top: 0,
+    left: 0,
+    backgroundColor: "#4285F4",
+    borderTopLeftRadius: 11,
+  },
+  googleGRed: {
+    top: 0,
+    right: 0,
+    backgroundColor: "#EA4335",
+    borderTopRightRadius: 11,
+  },
+  googleGYellow: {
+    bottom: 0,
+    left: 0,
+    backgroundColor: "#FBBC05",
+    borderBottomLeftRadius: 11,
+  },
+  googleGGreen: {
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#34A853",
+    borderBottomRightRadius: 11,
+  },
+  googleGWhite: {
+    position: "absolute",
+    width: 14,
+    height: 14,
+    backgroundColor: "#fff",
+    borderRadius: 7,
+    top: 4,
+    left: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  googleGText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#4285F4",
+    marginTop: -1,
   },
   googleBtnText: { fontWeight: "600", color: "#444" },
   benefitsContainer: { marginTop: 24, gap: 10 },

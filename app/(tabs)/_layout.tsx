@@ -8,7 +8,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,   // This will hide top header
+        headerShown: false,   // top header hide garna lai use huncha
         tabBarActiveTintColor: "#007AFF",
         tabBarInactiveTintColor: "gray",
       }}
@@ -60,6 +60,18 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <Feather name={isLoggedIn ? "user" : "log-in"} color={color} size={size} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          href: null, // yesla chai tab bar ma dekhaudaina
+        }}
+      />
+      <Tabs.Screen
+        name="alert-settings"
+        options={{
+          href: null, 
         }}
       />
     </Tabs>
