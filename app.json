@@ -9,13 +9,14 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "ios": {
-      "supportsTabletMode": true
+      
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.techproject"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

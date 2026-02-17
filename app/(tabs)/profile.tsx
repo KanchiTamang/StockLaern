@@ -1,264 +1,109 @@
 import { Feather } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-import { useLayoutEffect, useState } from "react";
+import { Link, useRouter } from "expo-router";
 import {
-  ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
-
+import HeaderBar from "../components/HeaderBar";
+import TopRightMenu from "../components/TopRightMenu";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
+  const { isAuthenticated, userName, email } = useAuth();
 
-  // AUTH STATES
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: {
-        display: isLoggedIn ? "flex" : "none",
-      },
-    });
-  }, [navigation, isLoggedIn]);
-
-  // FORM STATES
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [number, setNumber] = useState("");
-  const [address, setAddress] = useState("");
-  const [wardNo, setWardNo] = useState("");
-
-  const BASE_URL = "https://winston-uncastigated-addictedly.ngrok-free.dev";
-  const wardNumbers = Array.from({ length: 32 }, (_, i) => (i + 1).toString());
-
-  const handleSubmit = async () => {
-    // Validation
-    if (!email || !password || (!isLogin && (!name || !number || !address || !wardNo))) {
-      Alert.alert("Error", "Please fill all the fields");
-      return;
-    }
-
-    const url = isLogin ? `${BASE_URL}/auth/login` : `${BASE_URL}/auth/signup`;
-    setLoading(true);
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify(
-          isLogin
-            ? { email, password }
-            : { name, number, email, password, address, wardNo }
-        ),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        Alert.alert("Failure", data.message || "Server error");
-        return;
-      }
-
-      Alert.alert("Success", isLogin ? "Login Successful" : "Signup Successful");
-      setIsLoggedIn(true);
-      // Redirect to dashboard
-      router.push("/(tabs)/dashboard");
-    } catch (error) {
-      Alert.alert("Connection Error", "Cannot connect to the server.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignup = () => {
-    // For now, simulate successful Google signup
-    Alert.alert("Success", "Google Sign-up Successful");
-    setIsLoggedIn(true);
-    // Redirect to dashboard
-    router.push("/(tabs)/dashboard");
-  };
-
-  // --- DASHBOARD VIEW ---
-  if (isLoggedIn) {
+  if (isAuthenticated) {
     return (
-      <View style={styles.container}>
-        <View style={styles.navBar}>
-          <View style={styles.navTitleContainer}>
-            <Text style={styles.navTitle}>My Dashboard</Text>
-            <Text style={styles.navSubtitle}>Welcome, {name || email.split('@')[0]}!</Text>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View style={styles.headerGradient}>
+          <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
+          <View style={styles.headerContent}>
+            <View style={styles.iconContainer}>
+              <Feather name="user" size={22} color="#fff" />
+            </View>
+            <Text style={styles.headerTitle}>{userName || "StockLearn User"}</Text>
+            <Text style={styles.headerSubtitle}>{email || "your@email.com"}</Text>
           </View>
-          <TouchableOpacity style={styles.menuBtn} onPress={() => setShowMenu(!showMenu)}>
-            <Feather name="more-vertical" size={22} color="#1E293B" />
-          </TouchableOpacity>
         </View>
 
-        {showMenu && (
-          <View style={styles.dropdown}>
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => {
-                setShowMenu(false);
-                setIsLoggedIn(false);
-                setIsLogin(true);
-              }}
-            >
-              <Feather name="log-out" size={18} color="#EF4444" />
-              <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+        <View style={styles.formCard}>
+          <Text style={styles.sectionTitle}>Account Overview</Text>
+          <View style={styles.infoRow}>
+            <Feather name="mail" size={16} color="#0B3B78" />
+            <Text style={styles.infoText}>{email || "email not set"}</Text>
           </View>
-        )}
-      </View>
+          <View style={styles.infoRow}>
+            <Feather name="bell" size={16} color="#0B3B78" />
+            <Text style={styles.infoText}>Notifications enabled</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Feather name="grid" size={16} color="#0B3B78" />
+            <Text style={styles.infoText}>Personalized dashboard active</Text>
+          </View>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>quick actions</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity style={styles.mainButton} onPress={() => router.push("/(tabs)/dashboard")}>
+            <Text style={styles.mainButtonText}>Go to Dashboard</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push("/(tabs)/alert-settings")}>
+            <Text style={styles.secondaryButtonText}>Manage Alerts</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     );
   }
 
-  // --- AUTH VIEW (Login/Signup) ---
+  // --- Logged out view ---
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      {/* Dynamic Header */}
       <View style={styles.headerGradient}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
+        <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
         <View style={styles.headerContent}>
           <View style={styles.iconContainer}>
             <Feather name="trending-up" size={24} color="#fff" />
           </View>
           <Text style={styles.headerTitle}>Welcome to StockLearn</Text>
-          <Text style={styles.headerSubtitle}>
-            {isLogin ? "Login to access personalized features" : "Join to get market alerts"}
-          </Text>
+          <Text style={styles.headerSubtitle}>Log in or create your account to continue</Text>
         </View>
       </View>
 
       <View style={styles.formCard}>
-        {/* Toggle Switch */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, isLogin && styles.toggleActive]}
-            onPress={() => setIsLogin(true)}
-          >
-            <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>Login</Text>
+        <Link href="/(tabs)/login" asChild>
+          <TouchableOpacity style={styles.mainButton}>
+            <Text style={styles.mainButtonText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, !isLogin && styles.toggleActive]}
-            onPress={() => setIsLogin(false)}
-          >
-            <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>Sign Up</Text>
+        </Link>
+        <Link href="/(tabs)/signup" asChild>
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Create Account</Text>
           </TouchableOpacity>
+        </Link>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
         </View>
 
-        {/* Form Fields */}
-        {!isLogin && (
-          <>
-            <View style={styles.inputBlock}>
-              <Text style={styles.label}>Full Name</Text>
-              <View style={styles.inputWrapper}>
-                <Feather name="user" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput style={styles.input} placeholder="Enter your name" value={name} onChangeText={setName} />
-              </View>
-            </View>
-            <View style={styles.inputBlock}>
-              <Text style={styles.label}>Phone Number</Text>
-              <View style={styles.inputWrapper}>
-                <Feather name="phone" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput style={styles.input} keyboardType="phone-pad" placeholder="Enter phone number" value={number} onChangeText={setNumber} />
-              </View>
-            </View>
-          </>
-        )}
-
-        <View style={styles.inputBlock}>
-          <Text style={styles.label}>Email Address</Text>
-          <View style={styles.inputWrapper}>
-            <Feather name="mail" size={18} color="#94A3B8" style={styles.inputIcon} />
-            <TextInput style={styles.input} autoCapitalize="none" placeholder="your@email.com" value={email} onChangeText={setEmail} />
-          </View>
-        </View>
-
-        <View style={styles.inputBlock}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Feather name="lock" size={18} color="#94A3B8" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              secureTextEntry={!showPassword}
-              placeholder="Enter password"
-              value={password}
-              onChangeText={setPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Feather name={showPassword ? "eye" : "eye-off"} size={18} color="#94A3B8" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {!isLogin && (
-          <>
-            <View style={styles.inputBlock}>
-              <Text style={styles.label}>Address</Text>
-              <View style={styles.inputWrapper}>
-                <Feather name="map-pin" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput style={styles.input} placeholder="Enter your address" value={address} onChangeText={setAddress} />
-              </View>
-            </View>
-            <View style={styles.inputBlock}>
-              <Text style={styles.label}>Ward Number</Text>
-              <View style={styles.inputWrapper}>
-                <Feather name="home" size={18} color="#94A3B8" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Select ward (1-32)"
-                  keyboardType="numeric"
-                  value={wardNo}
-                  onChangeText={(text) => {
-                    // Only allow numbers
-                    const numericValue = text.replace(/[^0-9]/g, '');
-                    setWardNo(numericValue);
-                  }}
-                />
-              </View>
-            </View>
-          </>
-        )}
-
-        {isLogin && (
-          <TouchableOpacity style={styles.forgotBtn}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity style={styles.mainButton} onPress={handleSubmit} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.mainButtonText}>{isLogin ? "Login" : "Create Account"}</Text>}
-        </TouchableOpacity>
-
-        {!isLogin && (
-          <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignup}>
+        <Link href="/(tabs)/signup" asChild>
+          <TouchableOpacity style={styles.googleBtn}>
             <GoogleLogo />
-            <Text style={styles.googleBtnText}>Sign Up with Google</Text>
+            <Text style={styles.googleBtnText}>Continue with Google</Text>
           </TouchableOpacity>
-        )}
+        </Link>
 
-        {/* Benefits Section */}
         <View style={styles.benefitsContainer}>
           <Text style={styles.benefitsTitle}>With an account, you get:</Text>
-          <BenefitItem text="Personalized price & volume spike alerts" color="#70A288" />
-          <BenefitItem text="Custom watchlist and portfolio tracking" color="#04395E" />
+          <BenefitItem text="Personalized price & volume spike alerts" color="#5B8DEF" />
+          <BenefitItem text="Custom watchlist and learning progress" color="#0B3B78" />
         </View>
       </View>
     </ScrollView>
@@ -299,17 +144,20 @@ function GoogleLogo() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   headerGradient: {
-    backgroundColor: "#031D44",
+    backgroundColor: "#0A2D5C",
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    overflow: "visible",
+    position: "relative",
+    elevation: 50,
+    zIndex: 50,
   },
-  backBtn: { marginBottom: 20 },
   headerContent: { gap: 8 },
   iconContainer: {
-    backgroundColor: "#70A288",
+    backgroundColor: "#5B8DEF",
     width: 44,
     height: 44,
     borderRadius: 12,
@@ -319,12 +167,23 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 24, fontWeight: "bold", color: "#fff" },
   headerSubtitle: { fontSize: 14, color: "#CBD5E1" },
-  formCard: { marginHorizontal: 20, marginTop: -20, padding: 20, backgroundColor: "#fff", borderRadius: 24, elevation: 4 },
+  formCard: {
+    marginHorizontal: 20,
+    marginTop: -20,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    elevation: 4,
+    zIndex: 1,
+  },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: "#1E293B", marginBottom: 12 },
+  infoRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
+  infoText: { fontSize: 13, color: "#475569", fontWeight: "600" },
   toggleContainer: { flexDirection: "row", backgroundColor: "#F1F5F9", padding: 4, borderRadius: 12, marginBottom: 20 },
   toggleBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 10 },
   toggleActive: { backgroundColor: "#fff" },
   toggleText: { fontSize: 14, color: "#64748B", fontWeight: "600" },
-  toggleTextActive: { color: "#031D44" },
+  toggleTextActive: { color: "#0A2D5C" },
   inputBlock: { marginBottom: 16 },
   label: { fontSize: 13, fontWeight: "600", color: "#475569", marginBottom: 6 },
   inputWrapper: {
@@ -339,9 +198,17 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 14, color: "#1E293B" },
   forgotBtn: { alignSelf: "flex-end", marginBottom: 20 },
-  forgotText: { color: "#04395E", fontSize: 13, fontWeight: "600" },
-  mainButton: { backgroundColor: "#04395E", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 10 },
+  forgotText: { color: "#0B3B78", fontSize: 13, fontWeight: "600" },
+  mainButton: { backgroundColor: "#0B3B78", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 10 },
   mainButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  secondaryButton: {
+    backgroundColor: "#E2E8F0",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  secondaryButtonText: { color: "#1E293B", fontWeight: "700", fontSize: 15 },
   googleBtn: {
     flexDirection: "row",
     borderWidth: 1,
@@ -418,13 +285,32 @@ const styles = StyleSheet.create({
   benefitRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   dot: { width: 6, height: 6, borderRadius: 3 },
   benefitText: { fontSize: 12, color: "#475569" },
-  // Dashboard Styles
-  navBar: { paddingTop: 60, paddingHorizontal: 20, flexDirection: "row", alignItems: "center" },
-  navTitleContainer: { flex: 1 },
-  navTitle: { fontSize: 22, fontWeight: "700" },
-  navSubtitle: { fontSize: 14, color: "#64748B" },
-  menuBtn: { padding: 6 },
-  dropdown: { position: "absolute", top: 100, right: 20, backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", elevation: 5, padding: 10 },
-  dropdownItem: { flexDirection: "row", alignItems: "center", gap: 8 },
-  logoutText: { color: "#EF4444", fontWeight: "600" },
+  dividerRow: { flexDirection: "row", alignItems: "center", marginTop: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#E2E8F0" },
+  dividerText: { marginHorizontal: 8, color: "#94A3B8", fontSize: 12 },
+  statusBanner: {
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  statusSuccess: {
+    backgroundColor: "#ECFDF5",
+    borderColor: "#A7F3D0",
+  },
+  statusError: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FECACA",
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  statusTextSuccess: {
+    color: "#065F46",
+  },
+  statusTextError: {
+    color: "#B91C1C",
+  },
 });

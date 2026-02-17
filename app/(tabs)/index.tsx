@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { Link, useRouter } from "expo-router";
 import {
   ScrollView,
   StyleSheet,
@@ -7,274 +8,231 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import HeaderBar from "../components/HeaderBar";
+import TopRightMenu from "../components/TopRightMenu";
+import { useAuth } from "../context/AuthContext";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { isAuthenticated, signOut } = useAuth();
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Feather name="trending-up" size={24} color="#fff" />
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <LinearGradient
+        colors={["#0A2D5C", "#0B3B78"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <View style={styles.heroTopRow}>
+          <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
         </View>
-        <Text style={styles.title}>Stock Learn</Text>
-        <Text style={styles.subtitle}>
-          Your beginner-friendly platform to learn about the stock market, track
-          NEPSE data, and stay informed with intelligent alerts.
+        <Text style={styles.heroTitle}>Track NEPSE like a pro, learn like a beginner.</Text>
+        <Text style={styles.heroSubtitle}>
+          Personalized lessons, market snapshots, and alert-ready watchlists - all in one app.
         </Text>
-      </View>
+        <View style={styles.heroActions}>
+          <Link href={isAuthenticated ? "/(tabs)/dashboard" : "/(tabs)/signup"} asChild>
+            <TouchableOpacity style={styles.primaryCta}>
+              <Text style={styles.primaryCtaText}>
+                {isAuthenticated ? "Open Dashboard" : "Get Started"}
+              </Text>
+            </TouchableOpacity>
+          </Link>
+          {isAuthenticated ? (
+            <TouchableOpacity
+              style={styles.secondaryCta}
+              onPress={() => {
+                signOut();
+                router.push("/(tabs)/login");
+              }}
+            >
+              <Text style={styles.secondaryCtaText}>Logout</Text>
+            </TouchableOpacity>
+          ) : (
+            <Link href="/(tabs)/login" asChild>
+              <TouchableOpacity style={styles.secondaryCta}>
+                <Text style={styles.secondaryCtaText}>Login</Text>
+              </TouchableOpacity>
+            </Link>
+          )}
+        </View>
+      </LinearGradient>
 
-      {/* Market Overview */}
-      <View style={styles.marketCard}>
-        <View style={styles.marketTop}>
+      <View style={styles.content}>
+        <View style={styles.snapshotCard}>
           <View>
-            <Text style={styles.marketLabel}>NEPSE Index</Text>
-            <Text style={styles.marketValue}>2,156.42</Text>
+            <Text style={styles.snapshotLabel}>NEPSE Index</Text>
+            <Text style={styles.snapshotValue}>2,156.42</Text>
           </View>
-
-          <View style={styles.marketIcon}>
-            <Feather name="trending-up" size={22} color="#fff" />
+          <View style={styles.snapshotBadge}>
+            <Text style={styles.snapshotBadgeText}>+2.4%</Text>
           </View>
         </View>
 
-        <View style={styles.marketBottom}>
-          <View style={styles.percentBadge}>
-            <Text style={styles.percentText}>+2.4%</Text>
-          </View>
-          <Text style={styles.marketSub}>+51.24 points today</Text>
-        </View>
-      </View>
-
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
-
-      <QuickAction
-        icon="book-open"
-        title="Beginner Guide"
-        desc="Learn stock market basics"
-        link="/learn"
-        bg="#DBEAFE"
-        color="#2563EB"
-      />
-
-      <QuickAction
-        icon="trending-up"
-        title="Browse Market"
-        desc="Explore NEPSE companies"
-        link="/market"
-        bg="#DCFCE7"
-        color="#16A34A"
-      />
-
-      <QuickAction
-        icon="bar-chart-2"
-        title="Visual Insights"
-        desc="Charts & market analysis"
-        link="/insights"
-        bg="#F3E8FF"
-        color="#7C3AED"
-      />
-
-      {/*  Alert CTA (MISSING PART – NOW ADDED) */}
-      <View style={styles.alertCard}>
-        <View style={styles.alertIcon}>
-          <Feather name="bell" size={20} color="#D97706" />
+        <Text style={styles.sectionTitle}>What you can do</Text>
+        <View style={styles.featureGrid}>
+          <FeatureCard
+            icon="book-open"
+            title="Guided Lessons"
+            desc="Structured learning with quizzes."
+            color="#2563EB"
+            bg="#DBEAFE"
+            link="/learn"
+          />
+          <FeatureCard
+            icon="bar-chart-2"
+            title="Market Insights"
+            desc="Visualize trends & sectors."
+            color="#7C3AED"
+            bg="#F3E8FF"
+            link="/insights"
+          />
+          <FeatureCard
+            icon="trending-up"
+            title="Browse Market"
+            desc="Explore NEPSE companies."
+            color="#16A34A"
+            bg="#DCFCE7"
+            link="/market"
+          />
+          <FeatureCard
+            icon="bell"
+            title="Smart Alerts"
+            desc="Custom watchlist triggers."
+            color="#D97706"
+            bg="#FEF3C7"
+            link="/(tabs)/alert-settings"
+          />
         </View>
 
-        <View style={{ flex: 1 }}>
-          <Text style={styles.alertTitle}>Stay Updated</Text>
-          <Text style={styles.alertDesc}>
-            Get alerts for price changes, volume spikes, and market trends
+        <View style={styles.bannerCard}>
+          <Text style={styles.bannerTitle}>Ready to learn the market?</Text>
+          <Text style={styles.bannerDesc}>
+            {isAuthenticated
+              ? "Jump into the Beginner Guide and keep building your progress."
+              : "Start reading our lessons and quizzes instantly—no account needed."}
           </Text>
-
-          <Link href="/(tabs)/profile" asChild>
-            <Text style={styles.alertLink}>Sign up for alerts →</Text>
+          <Link href="/(tabs)/learn" asChild>
+            <TouchableOpacity style={styles.bannerButton}>
+              <Text style={styles.bannerButtonText}>Start Learning Now</Text>
+            </TouchableOpacity>
           </Link>
         </View>
-      </View>
-
-      {/*  Beginner Tip (MISSING PART – NOW ADDED) */}
-      <View style={styles.tipCard}>
-        <Text style={styles.tipTitle}>💡 Beginner Tip</Text>
-        <Text style={styles.tipDesc}>
-          Start by learning what stocks are and how the NEPSE market works. Check
-          out our Beginner Guide!
-        </Text>
       </View>
     </ScrollView>
   );
 }
 
-/* component*/
-
-function QuickAction({ icon, title, desc, link, bg, color }: any) {
+function FeatureCard({ icon, title, desc, link, bg, color }: any) {
   return (
     <Link href={link} asChild>
-      <TouchableOpacity style={styles.actionCard}>
-        <View style={[styles.actionIcon, { backgroundColor: bg }]}>
-          <Feather name={icon} size={20} color={color} />
+      <TouchableOpacity style={styles.featureCard}>
+        <View style={[styles.featureIcon, { backgroundColor: bg }]}>
+          <Feather name={icon} size={18} color={color} />
         </View>
-
-        <View style={{ flex: 1 }}>
-          <Text style={styles.actionTitle}>{title}</Text>
-          <Text style={styles.actionDesc}>{desc}</Text>
-        </View>
-
-        <Feather name="arrow-right" size={20} color="#9CA3AF" />
+        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={styles.featureDesc}>{desc}</Text>
       </TouchableOpacity>
     </Link>
   );
 }
 
-/* styling*/
-
 const styles = StyleSheet.create({
   container: { backgroundColor: "#F8FAFC" },
-
-  header: { marginBottom: 24 },
-
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "#70A288",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+  hero: {
+    paddingTop: 64,
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    zIndex: 50,
+    elevation: 50,
   },
-
-  logoBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-
-  title: { fontSize: 28, fontWeight: "700", color: "#0F172A" },
-
-  subtitle: {
-    marginTop: 6,
-    fontSize: 15,
-    color: "#64748B",
-    lineHeight: 22,
-  },
-
-  marketCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    backgroundColor: "#70A288",
-  },
-
-  marketTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 14,
-  },
-
-  marketLabel: { color: "#E0F2FE", fontSize: 13 },
-
-  marketValue: { color: "#fff", fontSize: 32, fontWeight: "700" },
-
-  marketIcon: {
-    backgroundColor: "rgba(255,255,255,0.25)",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  marketBottom: { flexDirection: "row", alignItems: "center", gap: 10 },
-
-  percentBadge: {
+  heroTopRow: { marginBottom: 16, zIndex: 100, elevation: 100 },
+  heroTitle: { color: "#fff", fontSize: 26, fontWeight: "800", lineHeight: 32 },
+  heroSubtitle: { color: "#CBD5E1", fontSize: 14, lineHeight: 20, marginTop: 10 },
+  heroActions: { flexDirection: "row", gap: 12, marginTop: 18 },
+  primaryCta: {
     backgroundColor: "#22C55E",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderRadius: 999,
   },
-
-  percentText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-
-  marketSub: { color: "#E0F2FE", fontSize: 13 },
-
+  primaryCtaText: { color: "#0F172A", fontWeight: "700" },
+  secondaryCta: {
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+  },
+  secondaryCtaText: { color: "#fff", fontWeight: "600" },
+  content: { paddingHorizontal: 20, paddingTop: 20 },
+  snapshotCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  snapshotLabel: { color: "#64748B", fontSize: 12, fontWeight: "600" },
+  snapshotValue: { color: "#0F172A", fontSize: 24, fontWeight: "700" },
+  snapshotBadge: {
+    backgroundColor: "#DCFCE7",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  snapshotBadgeText: { color: "#15803D", fontWeight: "700", fontSize: 12 },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#0F172A",
     marginBottom: 12,
   },
-
-  actionCard: {
+  featureGrid: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    marginBottom: 12,
-  },
-
-  actionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-
-  actionTitle: { fontSize: 16, fontWeight: "600", color: "#0F172A" },
-
-  actionDesc: { fontSize: 13, color: "#64748B" },
-
-  /* Alert */
-  alertCard: {
-    flexDirection: "row",
-    backgroundColor: "#FEF9F3",
-    borderWidth: 1,
-    borderColor: "#E7D4C8",
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 20,
+    flexWrap: "wrap",
     gap: 12,
   },
-
-  alertIcon: {
-    backgroundColor: "#F0E6D8",
-    padding: 10,
-    borderRadius: 12,
-  },
-
-  alertTitle: { fontWeight: "600", color: "#0F172A" },
-
-  alertDesc: {
-    fontSize: 13,
-    color: "#64748B",
-    marginVertical: 6,
-  },
-
-  alertLink: { color: "#04395E", fontSize: 13, fontWeight: "500" },
-
-  /* Tip */
-  tipCard: {
-    backgroundColor: "#EEF2FF",
-    borderWidth: 1,
-    borderColor: "#C7D2FE",
+  featureCard: {
+    width: "48%",
+    backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 16,
-    marginTop: 16,
-    marginBottom: 40,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-
-  tipTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#3730A3",
-    marginBottom: 4,
+  featureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
   },
-
-  tipDesc: { fontSize: 13, color: "#475569" },
+  featureTitle: { fontSize: 14, fontWeight: "700", color: "#0F172A" },
+  featureDesc: { fontSize: 12, color: "#64748B", marginTop: 4 },
+  bannerCard: {
+    marginTop: 20,
+    backgroundColor: "#0B3B78",
+    borderRadius: 18,
+    padding: 18,
+  },
+  bannerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  bannerDesc: { color: "#CBD5E1", fontSize: 12, marginTop: 6 },
+  bannerButton: {
+    marginTop: 12,
+    backgroundColor: "#22C55E",
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignSelf: "flex-start",
+  },
+  bannerButtonText: { color: "#0F172A", fontWeight: "700" },
 });

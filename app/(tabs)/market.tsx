@@ -1,4 +1,4 @@
-import { Activity, ArrowLeft, Search, TrendingDown, TrendingUp } from "lucide-react-native";
+import { Activity, Search, TrendingDown, TrendingUp } from "lucide-react-native";
 import { useState } from "react";
 import {
   ScrollView,
@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+import HeaderBar from "../components/HeaderBar";
+import TopRightMenu from "../components/TopRightMenu";
 
 type Page = "home" | "market";
 
@@ -50,9 +52,9 @@ export default function MarketScreen({ onNavigate }: BrowseMarketProps) {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => onNavigate("home")} style={styles.backButton}>
-          <ArrowLeft width={24} height={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.headerTopRow}>
+          <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
+        </View>
         <Text style={styles.headerTitle}>Browse Market</Text>
         <Text style={styles.headerSubtitle}>NEPSE Commercial Banks Data</Text>
       </View>
@@ -154,17 +156,21 @@ export default function MarketScreen({ onNavigate }: BrowseMarketProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
+  container: { flex: 1, backgroundColor: "#F8FAFC", overflow: "visible" },
   header: {
     backgroundColor: "#031D44",
     padding: 20,
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
+    overflow: "visible",
+    position: "relative",
+    zIndex: 50,
+    elevation: 50,
   },
-  backButton: { marginBottom: 10 },
+  headerTopRow: { marginBottom: 10, zIndex: 100, elevation: 100 },
   headerTitle: { fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 4 },
   headerSubtitle: { color: "#d1fae5", fontSize: 14 },
-  content: { padding: 16 },
+  content: { padding: 16, zIndex: 0 },
   statsRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
   statBox: { flex: 1, backgroundColor: "#fff", borderRadius: 12, padding: 12, marginHorizontal: 4, alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2, borderWidth: 1, borderColor: "#E2E8F0" },
   statLabel: { fontSize: 12, color: "#6b7280", marginBottom: 4 },

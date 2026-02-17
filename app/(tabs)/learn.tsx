@@ -13,8 +13,9 @@ import {
   X,
   XCircle
 } from 'lucide-react-native';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Modal,
@@ -25,6 +26,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import HeaderBar from "../components/HeaderBar";
+import TopRightMenu from "../components/TopRightMenu";
+import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../lib/api';
 
 let WebView: any = null;
 try {
@@ -47,152 +52,53 @@ function getYouTubeEmbedUrl(url: string): string {
   return url;
 }
 
-// Enhanced lesson structure with videos and MCQs
-const lessons = [
-  {
-    id: 1,
-    title: 'What is a Stock?',
-    icon: TrendingUp,
-    color: '#10B981',
-    duration: '5 min',
-    content: 'A stock represents ownership in a company. When you buy a stock, you become a shareholder and own a piece of that company\'s future. Stocks are traded on stock exchanges like NEPSE, and their prices fluctuate based on supply and demand.',
-    videoUrl: 'https://youtu.be/geLITYNA9tE', // Sample YouTube URL
-    mcqs: [
-      {
-        question: 'What does owning a stock mean?',
-        options: [
-          'You own a piece of the company',
-          'You are a creditor to the company',
-          'You work for the company',
-          'You have a loan from the company'
-        ],
-        correctAnswer: 0,
-        explanation: 'When you buy a stock, you become a shareholder and own a portion of that company.'
-      },
-      {
-        question: 'Where are stocks traded in Nepal?',
-        options: [
-          'NEPSE',
-          'Kathmandu Stock Market',
-          'Nepal Bank',
-          'SEBON'
-        ],
-        correctAnswer: 0,
-        explanation: 'NEPSE (Nepal Stock Exchange) is the only stock exchange in Nepal where stocks are traded.'
-      },
-      {
-        question: 'What affects stock prices?',
-        options: [
-          'Supply and demand',
-          'Weather conditions',
-          'Company location only',
-          'Stock color'
-        ],
-        correctAnswer: 0,
-        explanation: 'Stock prices fluctuate based on supply and demand in the market.'
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Understanding NEPSE',
-    icon: BookOpen,
-    color: '#10B981',
-    duration: '6 min',
-    content: 'Nepal Stock Exchange (NEPSE) is the only stock exchange in Nepal. It is the marketplace where buyers and sellers trade shares of listed companies. NEPSE provides a platform for companies to raise capital and for investors to buy and sell securities.',
-    videoUrl: 'https://www.youtube.com/watch?v=ZCFkWDdmXG8',
-    mcqs: [
-      {
-        question: 'What does NEPSE stand for?',
-        options: [
-          'Nepal Stock Exchange',
-          'Nepal Securities Exchange',
-          'Nepal Stock Education',
-          'Nepal Securities Education'
-        ],
-        correctAnswer: 0,
-        explanation: 'NEPSE stands for Nepal Stock Exchange, the only stock exchange in Nepal.'
-      },
-      {
-        question: 'What is the main function of NEPSE?',
-        options: [
-          'Facilitate trading of stocks',
-          'Print money',
-          'Manage banks',
-          'Regulate companies'
-        ],
-        correctAnswer: 0,
-        explanation: 'NEPSE facilitates the trading of stocks and securities between buyers and sellers.'
-      }
-    ]
-  },
-  {
-    id: 3,
-    title: 'Risk & Diversification',
-    icon: Shield,
-    color: '#10B981',
-    duration: '7 min',
-    content: 'Diversification means spreading your investments across different sectors (like Banking, Hydro, and Hotels) to reduce the impact of any single stock performing poorly. This helps manage risk and protect your portfolio from significant losses.',
-    videoUrl: 'https://www.youtube.com/watch?v=F8yRu2T3O0E',
-    mcqs: [
-      {
-        question: 'What is diversification?',
-        options: [
-          'Spreading investments across different sectors',
-          'Putting all money in one stock',
-          'Avoiding investments',
-          'Only investing in banks'
-        ],
-        correctAnswer: 0,
-        explanation: 'Diversification means spreading investments across different sectors to reduce risk.'
-      },
-      {
-        question: 'Why is diversification important?',
-        options: [
-          'To reduce risk',
-          'To increase risk',
-          'To avoid all investments',
-          'To only invest in one company'
-        ],
-        correctAnswer: 0,
-        explanation: 'Diversification helps reduce risk by not putting all your money in one place.'
-      }
-    ]
-  },
-  {
-    id: 4,
-    title: 'Reading Market Data',
-    icon: PieChart,
-    color: '#10B981',
-    duration: '8 min',
-    content: 'Learn to interpret key metrics: Price (current cost), Volume (total shares traded today), and Market Cap (total value of the company). Understanding these metrics helps you make informed investment decisions.',
-    videoUrl: 'https://www.youtube.com/watch?v=ZCFkWDdmXG8',
-    mcqs: [
-      {
-        question: 'What does "Volume" represent?',
-        options: [
-          'Total shares traded',
-          'Stock price',
-          'Company name',
-          'Market location'
-        ],
-        correctAnswer: 0,
-        explanation: 'Volume represents the total number of shares traded in a day.'
-      },
-      {
-        question: 'What is Market Cap?',
-        options: [
-          'Total value of the company',
-          'Stock price only',
-          'Number of employees',
-          'Company address'
-        ],
-        correctAnswer: 0,
-        explanation: 'Market Cap (Market Capitalization) is the total value of all outstanding shares of a company.'
-      }
-    ]
-  },
-];
+type ApiQuizQuestion = {
+  prompt: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation?: string;
+};
+
+type ApiLesson = {
+  _id: string;
+  title: string;
+  content: string;
+  duration: number;
+  videoUrl?: string;
+  color?: string;
+  icon?: string;
+  quiz?: ApiQuizQuestion[];
+};
+
+type ApiProgress = {
+  lessonId: { _id: string } | string;
+  completed: boolean;
+};
+
+type Lesson = {
+  id: string;
+  title: string;
+  icon: any;
+  iconName: string;
+  color: string;
+  duration: string;
+  content: string;
+  videoUrl: string;
+  mcqs: {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation?: string;
+  }[];
+};
+
+const iconMap: Record<string, any> = {
+  TrendingUp,
+  BookOpen,
+  Shield,
+  PieChart,
+  HelpCircle,
+};
 
 const externalResources = [
   { title: 'NEPSE Official', url: 'https://www.nepalstock.com', description: 'Live market data and announcements' },
@@ -200,21 +106,59 @@ const externalResources = [
   { title: 'Investopedia', url: 'https://www.investopedia.com', description: 'Global stock market encyclopedia' },
 ];
 
+const DEFAULT_COLOR = '#5B8DEF';
+const DEFAULT_ICON = 'BookOpen';
+
+function formatDuration(minutes?: number) {
+  if (!minutes || Number.isNaN(minutes)) {
+    return '5 min';
+  }
+  return `${minutes} min`;
+}
+
+function mapLesson(apiLesson: ApiLesson): Lesson {
+  const iconName = apiLesson.icon && iconMap[apiLesson.icon] ? apiLesson.icon : DEFAULT_ICON;
+  const icon = iconMap[iconName] || BookOpen;
+
+  return {
+    id: apiLesson._id,
+    title: apiLesson.title,
+    icon,
+    iconName,
+    color: apiLesson.color || DEFAULT_COLOR,
+    duration: formatDuration(apiLesson.duration),
+    content: apiLesson.content,
+    videoUrl: apiLesson.videoUrl || '',
+    mcqs: (apiLesson.quiz || []).map((question) => ({
+      question: question.prompt,
+      options: question.options,
+      correctAnswer: question.correctOptionIndex,
+      explanation: question.explanation,
+    })),
+  };
+}
+
 // MCQ Quiz Component
-function MCQQuiz({ questions, onComplete }: { questions: any[], onComplete: (score: number) => void }) {
+function MCQQuiz({ questions, onComplete }: { questions: any[], onComplete: (score: number, answers: number[]) => void }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(false);
-  
+  const [answers, setAnswers] = useState<number[]>(() => questions.map(() => -1));
+
   const scoreRef = useRef(0);
 
   const handleAnswer = (index: number) => {
     if (answered) return;
     setSelectedAnswer(index);
     setAnswered(true);
-    
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[currentQuestion] = index;
+      return next;
+    });
+
 
     if (index === questions[currentQuestion].correctAnswer) {
       scoreRef.current += 1;
@@ -230,13 +174,13 @@ function MCQQuiz({ questions, onComplete }: { questions: any[], onComplete: (sco
       setShowResult(false);
     } else {
       // This shouldn't be reached as handleFinish is called for last question
-      onComplete(scoreRef.current);
+      onComplete(scoreRef.current, answers);
     }
   };
 
   const handleFinish = () => {
     // Use ref to get the most up-to-date score value
-    onComplete(scoreRef.current);
+    onComplete(scoreRef.current, answers);
   };
 
   if (currentQuestion >= questions.length) {
@@ -285,19 +229,19 @@ function MCQQuiz({ questions, onComplete }: { questions: any[], onComplete: (sco
             <Text style={textStyle}>{option}</Text>
             {answered && isSelected && (
               isCorrect ? (
-                <CheckCircle size={22} color="#7FB069" strokeWidth={2.5} />
+                <CheckCircle size={22} color="#5B8DEF" strokeWidth={2.5} />
               ) : (
                 <XCircle size={22} color="#EF4444" strokeWidth={2.5} />
               )
             )}
             {answered && isCorrectOption && !isSelected && (
-              <CheckCircle size={22} color="#7FB069" strokeWidth={2.5} />
+              <CheckCircle size={22} color="#5B8DEF" strokeWidth={2.5} />
             )}
           </TouchableOpacity>
         );
       })}
 
-      {answered && (
+      {answered && question.explanation && (
         <View style={styles.explanationBox}>
           <Text style={styles.explanationText}>{question.explanation}</Text>
         </View>
@@ -318,11 +262,23 @@ function MCQQuiz({ questions, onComplete }: { questions: any[], onComplete: (sco
 }
 
 // Detailed Lesson View Component
-function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson: any, onClose: () => void, onComplete: () => void, isCompleted: boolean }) {
+function LessonDetailView({
+  lesson,
+  onClose,
+  onComplete,
+  isCompleted,
+}: {
+  lesson: Lesson;
+  onClose: () => void;
+  onComplete: (lessonId: string) => Promise<void> | void;
+  isCompleted: boolean;
+}) {
+  const { accessToken } = useAuth();
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
 
   const handleWatchVideo = () => {
     setShowVideo(true);
@@ -334,11 +290,34 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
 
   const embedUrl = getYouTubeEmbedUrl(lesson.videoUrl);
 
-  const handleQuizComplete = (score: number) => {
+  const handleQuizComplete = async (score: number, answers: number[]) => {
     setQuizScore(score);
     setQuizCompleted(true);
-    if (score === lesson.mcqs.length) {
-      onComplete();
+    if (!accessToken) {
+      if (score === lesson.mcqs.length) {
+        await onComplete(lesson.id);
+      }
+      return;
+    }
+
+    try {
+      setSubmittingQuiz(true);
+      const result = await apiFetch<{
+        passed: boolean;
+        scorePercent: number;
+        bestScore: number;
+      }>(`/progress/quiz/${lesson.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ answers }),
+      }, accessToken);
+
+      if (result.passed) {
+        await onComplete(lesson.id);
+      }
+    } catch (error: any) {
+      Alert.alert('Quiz Error', error?.message || 'Unable to submit quiz.');
+    } finally {
+      setSubmittingQuiz(false);
     }
   };
 
@@ -364,7 +343,7 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
               <Text style={styles.modalTitleCompact}>{lesson.title}</Text>
               {isCompleted && (
                 <View style={styles.completedBadgeHeader}>
-                  <CheckCircle size={16} color="#7FB069" />
+                  <CheckCircle size={16} color="#5B8DEF" />
                   <Text style={styles.completedBadgeText}>Completed</Text>
                 </View>
               )}
@@ -377,7 +356,7 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
           <View style={styles.videoSection}>
             {!showVideo ? (
               <>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.videoPlaceholder}
                   onPress={handleWatchVideo}
                   activeOpacity={0.8}
@@ -391,13 +370,13 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
               </>
             ) : (
               <View style={styles.videoContainer}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeVideoButton}
                   onPress={handleCloseVideo}
                 >
                   <X size={20} color="#fff" />
                 </TouchableOpacity>
-            {Platform.OS !== 'web' && embedUrl && (
+                {Platform.OS !== 'web' && embedUrl && (
                   <WebView
                     source={{ uri: embedUrl }}
                     style={styles.videoPlayer}
@@ -447,7 +426,7 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
           {/* Quiz Results */}
           {quizCompleted && quizScore !== null && (
             <View style={styles.quizResults}>
-              <Award size={48} color={quizScore === lesson.mcqs.length ? "#7FB069" : "#D4A574"} />
+              <Award size={48} color={quizScore === lesson.mcqs.length ? "#5B8DEF" : "#D4A574"} />
               <Text style={styles.resultsTitle}>
                 {quizScore === lesson.mcqs.length ? "Perfect Score! 🎉" : "Quiz Completed!"}
               </Text>
@@ -460,6 +439,9 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
               {quizScore === lesson.mcqs.length && (
                 <Text style={styles.congratsText}>Great job! You've mastered this lesson!</Text>
               )}
+              {submittingQuiz && (
+                <Text style={styles.resultsScore}>Saving quiz results...</Text>
+              )}
               <TouchableOpacity style={styles.retakeButton} onPress={handleStartQuiz}>
                 <Text style={styles.retakeButtonText}>Retake Quiz</Text>
               </TouchableOpacity>
@@ -469,15 +451,15 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
           <View style={styles.completeSection}>
             <TouchableOpacity
               style={styles.completeButton}
-              onPress={() => {
-                onComplete();
+              onPress={async () => {
+                await onComplete(lesson.id);
                 Alert.alert('Lesson Completed!', 'Great job! You\'ve completed this lesson.', [
                   {
                     text: 'OK',
                     onPress: () => {
                       onClose();
-                    }
-                  }
+                    },
+                  },
                 ]);
               }}
             >
@@ -501,20 +483,125 @@ function LessonDetailView({ lesson, onClose, onComplete, isCompleted }: { lesson
 }
 
 export default function LearnScreen() {
-  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
-  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const { accessToken, isAuthenticated } = useAuth();
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [loadingLessons, setLoadingLessons] = useState(false);
+  const [lessonsError, setLessonsError] = useState<string | null>(null);
 
-  const toggleLesson = (lesson: any) => {
-    setSelectedLesson(lesson);
-  };
+  /* MOCK DATA FOR OFFLINE/GUEST MODE */
+  const MOCK_LESSONS: Lesson[] = [
+    {
+      id: "mock1",
+      title: "Introduction to Stock Market",
+      icon: BookOpen,
+      iconName: "BookOpen",
+      color: "#5B8DEF",
+      duration: "5 min",
+      content: "The stock market is a platform where buyers and sellers come together to trade shares of publicly listed companies. It plays a crucial role in the economy by enabling companies to raise capital and giving investors a chance to grow their wealth.",
+      videoUrl: "https://www.youtube.com/watch?v=p7HKvqRI_Bo",
+      mcqs: [
+        {
+          question: "What is the primary function of the stock market?",
+          options: [
+            "To setting prices for goods",
+            "To enable trading of company shares",
+            "To print money",
+            "To provide loans"
+          ],
+          correctAnswer: 1,
+          explanation: "The stock market allows investors to buy and sell ownership shares in public companies."
+        }
+      ]
+    },
+    {
+      id: "mock2",
+      title: "Understanding Bull & Bear Markets",
+      icon: TrendingUp,
+      iconName: "TrendingUp",
+      color: "#16A34A",
+      duration: "7 min",
+      content: "A Bull Market is characterized by rising prices and optimism, while a Bear Market sees falling prices and pessimism. Understanding these trends helps in making informed investment decisions.",
+      videoUrl: "https://www.youtube.com/watch?v=W3I3kAg2J7w",
+      mcqs: [
+        {
+          question: "What characterizes a Bear Market?",
+          options: [
+            "Rising prices and optimism",
+            "Falling prices and pessimism",
+            "Stable prices",
+            "High inflation only"
+          ],
+          correctAnswer: 1,
+          explanation: "A Bear Market is defined by a prolonged drop in investment prices, typically 20% or more."
+        }
+      ]
+    }
+  ];
 
-  const handleLessonComplete = () => {
-    if (selectedLesson && !completedLessons.includes(selectedLesson.id)) {
-      setCompletedLessons(prev => [...prev, selectedLesson.id]);
+  const loadLessons = async () => {
+    try {
+      setLoadingLessons(true);
+      setLessonsError(null);
+      if (accessToken) {
+        const data = await apiFetch<ApiLesson[]>('/lessons', {}, accessToken);
+        setLessons(data.map(mapLesson));
+      } else {
+        // Use mock data if not logged in
+        setLessons(MOCK_LESSONS);
+      }
+    } catch (error: any) {
+      console.warn("Failed to load lessons from API, using mock data", error);
+      setLessons(MOCK_LESSONS);
+    } finally {
+      setLoadingLessons(false);
     }
   };
 
-  const progress = (completedLessons.length / lessons.length) * 100;
+  const loadProgress = async () => {
+    if (!accessToken) return;
+    try {
+      const data = await apiFetch<ApiProgress[]>('/progress/me', {}, accessToken);
+      const completed = data
+        .filter((item) => item.completed)
+        .map((item) => (typeof item.lessonId === 'string' ? item.lessonId : item.lessonId._id));
+      setCompletedLessons(completed);
+    } catch (error) {
+      console.warn('Unable to load progress', error);
+    }
+  };
+
+  useEffect(() => {
+    loadLessons();
+    if (accessToken) {
+      loadProgress();
+    }
+  }, [accessToken]);
+
+  const toggleLesson = async (lesson: Lesson) => {
+    setSelectedLesson(lesson);
+    if (!accessToken) return;
+    try {
+      await apiFetch(`/progress/start/${lesson.id}`, { method: 'POST' }, accessToken);
+    } catch (error) {
+      console.warn('Unable to start lesson', error);
+    }
+  };
+
+  const handleLessonComplete = async (lessonId: string) => {
+    if (accessToken) {
+      try {
+        await apiFetch(`/progress/complete/${lessonId}`, { method: 'POST' }, accessToken);
+      } catch (error) {
+        console.warn('Unable to complete lesson', error);
+      }
+    }
+
+    setCompletedLessons((prev) => (prev.includes(lessonId) ? prev : [...prev, lessonId]));
+  };
+
+  const progress = lessons.length > 0 ? (completedLessons.length / lessons.length) * 100 : 0;
 
   const handleOpenURL = (url: string) => {
     Linking.openURL(url).catch((err: any) => console.error("Couldn't load page", err));
@@ -524,11 +611,15 @@ export default function LearnScreen() {
     <View style={styles.container}>
       {/* Dark Blue Header */}
       <View style={styles.blueHeader}>
+        <View style={styles.blueHeaderTop}>
+          <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
+        </View>
         <Text style={styles.headerTitle}>Beginner's Guide</Text>
         <Text style={styles.headerSubtitle}>Learn stock market basics with videos & quizzes</Text>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
         {/* Header Section */}
         <View style={styles.header}>
         </View>
@@ -546,8 +637,25 @@ export default function LearnScreen() {
           </View>
         </View>
 
+        {loadingLessons && (
+          <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+            <ActivityIndicator color="#5B8DEF" />
+            <Text style={{ marginTop: 8, color: '#64748B' }}>Loading lessons...</Text>
+          </View>
+        )}
+
+        {lessonsError && (
+          <View style={styles.tipCard}>
+            <Text style={styles.tipTitle}>Lesson Load Error</Text>
+            <Text style={styles.tipText}>{lessonsError}</Text>
+            <TouchableOpacity style={[styles.retakeButton, { marginTop: 12 }]} onPress={loadLessons}>
+              <Text style={styles.retakeButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Completed Lessons Section */}
-        {completedLessons.length > 0 && (
+        {completedLessons.length > 0 && lessons.length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Completed Lessons</Text>
             {lessons
@@ -567,7 +675,7 @@ export default function LearnScreen() {
                       <View style={{ flex: 1, marginLeft: 12 }}>
                         <View style={styles.titleRow}>
                           <Text style={styles.lessonTitle}>{lesson.title}</Text>
-                          <CheckCircle size={18} color="#7FB069" />
+                          <CheckCircle size={18} color="#5B8DEF" />
                         </View>
                         <Text style={styles.lessonContent} numberOfLines={1}>{lesson.content}</Text>
                       </View>
@@ -632,7 +740,7 @@ export default function LearnScreen() {
             onPress={() => handleOpenURL(resource.url)}
           >
             <View style={styles.resourceIconBox}>
-              <ExternalLink size={18} color="#7FB069" />
+              <ExternalLink size={18} color="#5B8DEF" />
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.resourceTitle}>{resource.title}</Text>
@@ -670,7 +778,7 @@ export default function LearnScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: '#F8FAFC', overflow: "visible" },
   blueHeader: {
     backgroundColor: '#031D44',
     paddingTop: 60,
@@ -678,8 +786,13 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    overflow: "visible",
+    position: "relative",
+    zIndex: 50,
+    elevation: 50,
   },
-  scrollView: { flex: 1, paddingHorizontal: 16 },
+  blueHeaderTop: { marginBottom: 10, zIndex: 100, elevation: 100 },
+  scrollView: { flex: 1, paddingHorizontal: 16, zIndex: 0 },
   header: { marginBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
   headerSubtitle: { fontSize: 14, color: '#CBD5E1', marginTop: 4 },
@@ -696,9 +809,9 @@ const styles = StyleSheet.create({
   },
   progressTextContainer: { flex: 1 },
   cardTitle: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
-  progressStat: { fontSize: 14, fontWeight: '700', color: '#7FB069' },
+  progressStat: { fontSize: 14, fontWeight: '700', color: '#5B8DEF' },
   progressBarBg: { backgroundColor: '#F1F5F9', height: 10, borderRadius: 5 },
-  progressBarFill: { backgroundColor: '#7FB069', height: 10, borderRadius: 5 },
+  progressBarFill: { backgroundColor: '#5B8DEF', height: 10, borderRadius: 5 },
 
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 16, marginTop: 8 },
 
@@ -710,14 +823,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8E8E3'
   },
-  lessonCardCompleted: { borderColor: '#7FB069', backgroundColor: '#F0F7ED' },
+  lessonCardCompleted: { borderColor: '#5B8DEF', backgroundColor: '#E8F1FF' },
   completedLessonCard: {
-    backgroundColor: '#F0F7ED',
+    backgroundColor: '#E8F1FF',
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#7FB069',
+    borderColor: '#5B8DEF',
   },
   lessonHeader: { flexDirection: 'row', marginBottom: 16 },
   iconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
@@ -731,7 +844,7 @@ const styles = StyleSheet.create({
 
   button: { paddingVertical: 12, borderRadius: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
   buttonIncomplete: {
-    backgroundColor: '#70A288',
+    backgroundColor: '#5B8DEF',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -743,7 +856,7 @@ const styles = StyleSheet.create({
   buttonCompleted: { backgroundColor: '#E0EDD8' },
   buttonText: { fontWeight: '700', fontSize: 15 },
   buttonTextIncomplete: { color: '#fff', fontSize: 15 },
-  buttonTextCompleted: { color: '#6A9A5A' },
+  buttonTextCompleted: { color: '#3F6DD8' },
 
   resourceCard: {
     flexDirection: 'row',
@@ -755,7 +868,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0'
   },
-  resourceIconBox: { backgroundColor: '#F0F7ED', padding: 8, borderRadius: 10 },
+  resourceIconBox: { backgroundColor: '#E8F1FF', padding: 8, borderRadius: 10 },
   resourceTitle: { fontSize: 15, fontWeight: '700', color: '#1E293B' },
   resourceDesc: { fontSize: 12, color: '#64748B' },
 
@@ -800,17 +913,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F0F7ED',
+    backgroundColor: '#E8F1FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#7FB069',
+    borderColor: '#5B8DEF',
   },
   completedBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6A9A5A',
+    color: '#3F6DD8',
   },
 
   // Video Section
@@ -851,7 +964,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   watchVideoButton: {
-    backgroundColor: '#70A288',
+    backgroundColor: '#5B8DEF',
     padding: 12,
     borderRadius: 10,
     flexDirection: 'row',
@@ -893,7 +1006,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#7FB069',
+    backgroundColor: '#5B8DEF',
   },
   startQuizButtonText: { color: '#fff', fontWeight: '600', fontSize: 13 },
 
@@ -909,7 +1022,7 @@ const styles = StyleSheet.create({
   quizHeader: { marginBottom: 20 },
   quizTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginBottom: 8 },
   quizProgressBar: { backgroundColor: '#F1F5F9', height: 6, borderRadius: 3, overflow: 'hidden' },
-  quizProgressFill: { backgroundColor: '#70A288', height: 6, borderRadius: 3 },
+  quizProgressFill: { backgroundColor: '#5B8DEF', height: 6, borderRadius: 3 },
   questionText: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 20, lineHeight: 26 },
   option: {
     backgroundColor: '#F8FAFC',
@@ -922,22 +1035,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center'
   },
-  optionCorrect: { backgroundColor: '#F0F7ED', borderColor: '#70A288' },
+  optionCorrect: { backgroundColor: '#E8F1FF', borderColor: '#5B8DEF' },
   optionIncorrect: { backgroundColor: '#FEF2F2', borderColor: '#EF4444' },
   optionText: { fontSize: 15, color: '#1E293B', flex: 1 },
-  optionTextCorrect: { color: '#6A9A5A', fontWeight: '600' },
+  optionTextCorrect: { color: '#3F6DD8', fontWeight: '600' },
   optionTextIncorrect: { color: '#EF4444', fontWeight: '600' },
   explanationBox: {
-    backgroundColor: '#F0F7ED',
+    backgroundColor: '#E8F1FF',
     padding: 16,
     borderRadius: 12,
     marginTop: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#70A288'
+    borderLeftColor: '#5B8DEF'
   },
-  explanationText: { fontSize: 14, color: '#5A7A4F', lineHeight: 20 },
+  explanationText: { fontSize: 14, color: '#3057C9', lineHeight: 20 },
   nextButton: {
-    backgroundColor: '#7FB069',
+    backgroundColor: '#5B8DEF',
     padding: 16,
     borderRadius: 12,
     marginTop: 20,
@@ -957,8 +1070,8 @@ const styles = StyleSheet.create({
   },
   resultsTitle: { fontSize: 24, fontWeight: '800', color: '#1E293B', marginTop: 16, marginBottom: 8 },
   resultsScore: { fontSize: 16, color: '#64748B', marginBottom: 8 },
-  resultsPercentage: { fontSize: 48, fontWeight: '800', color: '#70A288', marginBottom: 8 },
-  congratsText: { fontSize: 14, color: '#6A9A5A', fontWeight: '600', marginTop: 8, textAlign: 'center' },
+  resultsPercentage: { fontSize: 48, fontWeight: '800', color: '#5B8DEF', marginBottom: 8 },
+  congratsText: { fontSize: 14, color: '#3F6DD8', fontWeight: '600', marginTop: 8, textAlign: 'center' },
   retakeButton: {
     backgroundColor: '#F1F5F9',
     padding: 14,
@@ -999,3 +1112,4 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 });
+
