@@ -1,5 +1,8 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BarChart, PieChart } from "react-native-chart-kit";
+import HeaderBar from "../components/HeaderBar";
+import TopRightMenu from "../components/TopRightMenu";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -64,72 +67,85 @@ export default function InsightsScreen() {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={{ padding: 20 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.title}>Market Insights</Text>
-      <Text style={styles.subtitle}>
-        Visual breakdown of NEPSE market trends
-      </Text>
-
-      {/*piechart */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Sector Allocation</Text>
-        <PieChart
-          data={sectorData}
-          width={screenWidth - 40}
-          height={220}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          chartConfig={chartConfig}
-          absolute
-        />
-      </View>
-
-      {/* Heatmap */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Market Momentum</Text>
-        <Text style={styles.cardDesc}>
-          Darker blocks indicate higher activity
+      <LinearGradient
+        colors={["#0A2D5C", "#0B3B78"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <HeaderBar tint="dark" rightSlot={<TopRightMenu theme="dark" />} />
+        <Text style={styles.headerTitle}>Market Insights</Text>
+        <Text style={styles.headerSubtitle}>
+          Visual breakdown of NEPSE market trends
         </Text>
+      </LinearGradient>
 
-        <View style={styles.heatMap}>
-          {heatMapData.map((value, index) => (
-            <View
-              key={index}
-              style={[
-                styles.heatCell,
-                { backgroundColor: getHeatColor(value) },
-              ]}
-            />
-          ))}
+      <View style={styles.content}>
+
+        {/*piechart */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Sector Allocation</Text>
+          <PieChart
+            data={sectorData}
+            width={screenWidth - 40}
+            height={220}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            chartConfig={chartConfig}
+            absolute
+          />
         </View>
-      </View>
 
-      {/* Barchart */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Gainers vs Losers</Text>
-        <BarChart
-          data={barData}
-          width={screenWidth - 40}
-          height={220}
-          fromZero
-          yAxisLabel=""
-          yAxisSuffix="%"
-          chartConfig={chartConfig}
-          showValuesOnTopOfBars
-        />
-      </View>
+        {/* Heatmap */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Market Momentum</Text>
+          <Text style={styles.cardDesc}>
+            Darker blocks indicate higher activity
+          </Text>
 
-      {/* Insights*/}
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>📌 Today’s Takeaways</Text>
-        <Text style={styles.infoText}>
-          • Banking sector dominates NEPSE volume{"\n"}
-          • Market sentiment is moderately bullish{"\n"}
-          • Beginners should observe before entering
-        </Text>
+          <View style={styles.heatMap}>
+            {heatMapData.map((value, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.heatCell,
+                  { backgroundColor: getHeatColor(value) },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Barchart */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Gainers vs Losers</Text>
+          <BarChart
+            data={barData}
+            width={screenWidth - 40}
+            height={220}
+            fromZero
+            yAxisLabel=""
+            yAxisSuffix="%"
+            chartConfig={barChartConfig}
+            showValuesOnTopOfBars
+            flatColor={true}
+            withInnerLines={true}
+          />
+        </View>
+
+        {/* Insights*/}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>📌 Today’s Takeaways</Text>
+          <Text style={styles.infoText}>
+            • Banking sector dominates NEPSE volume{"\n"}
+            • Market sentiment is moderately bullish{"\n"}
+            • Beginners should observe before entering
+          </Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -148,26 +164,55 @@ const chartConfig = {
   backgroundGradientFrom: "#FFFFFF",
   backgroundGradientTo: "#FFFFFF",
   decimalPlaces: 0,
-  color: () => "#2563EB",
-  labelColor: () => "#475569",
+  color: (opacity = 1) => `rgba(37, 99, 235, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(71, 85, 105, ${opacity})`,
+};
+
+const barChartConfig = {
+  backgroundGradientFrom: "#FFFFFF",
+  backgroundGradientTo: "#FFFFFF",
+  decimalPlaces: 0,
+  barPercentage: 0.6,
+  fillShadowGradient: "#0B3B78",
+  fillShadowGradientOpacity: 1,
+  color: (opacity = 1) => `rgba(11, 59, 120, ${opacity})`, // Solid Brand Blue
+  labelColor: (opacity = 1) => `rgba(71, 85, 105, ${opacity})`,
+  style: {
+    borderRadius: 16,
+  },
+  propsForBackgroundLines: {
+    strokeDasharray: "", // solid background lines
+    stroke: "#E2E8F0",
+  },
 };
 
 /* styling */
 
 const styles = StyleSheet.create({
   container: { backgroundColor: "#F8FAFC" },
-
-  title: {
+  headerGradient: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 22,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: "visible",
+    position: "relative",
+    elevation: 50,
+    zIndex: 50,
+  },
+  headerTitle: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#0F172A",
+    color: "#fff",
+    marginTop: 12,
   },
-
-  subtitle: {
+  headerSubtitle: {
     fontSize: 14,
-    color: "#64748B",
-    marginBottom: 20,
+    color: "#E0E7FF",
+    marginTop: 6,
   },
+  content: { paddingHorizontal: 20, paddingTop: 16, zIndex: 0 },
 
   card: {
     backgroundColor: "#FFFFFF",
